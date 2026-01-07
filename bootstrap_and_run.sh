@@ -65,8 +65,10 @@ else
 fi
 
 echo "[bootstrap] Build + Run"
-$COMPOSE up -d --build
+$COMPOSE up --build
 
+# Dieser Teil wird nur erreicht wenn der Container gestoppt wird (Ctrl+C)
 echo ""
-echo "Fertig. UI: http://localhost:8675"
-echo "Auth-Token/Passwort: AI_TOOLKIT_AUTH (default: password)"
+echo "Container wurde beendet."
+echo "Zum erneuten Starten: $COMPOSE up"
+echo "Zum Starten im Hintergrund: $COMPOSE up -d"
