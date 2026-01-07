@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
-set -euo pipefail
+
+# Fehlerbehandlung: Bei Fehler nicht sofort beenden, sondern Fenster offen halten
+error_handler() {
+  echo ""
+  echo "========================================="
+  echo "=== FEHLER aufgetreten! ==="
+  echo "========================================="
+  echo ""
+  echo "Drücke Enter zum Beenden..."
+  read
+  exit 1
+}
+trap error_handler ERR
+
+set -uo pipefail
 
 # ---------- helpers ----------
 have() { command -v "$1" >/dev/null 2>&1; }
@@ -28,7 +42,6 @@ else
 fi
 
 # ---------- 2) NVIDIA Container Toolkit (für --gpus) ----------
-# Offizielle Doku: NVIDIA Container Toolkit Install Guide  [oai_citation:5‡NVIDIA Docs](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html?utm_source=chatgpt.com)
 if detect_nvidia; then
   echo "[bootstrap] NVIDIA GPU erkannt -> installiere nvidia-container-toolkit (falls nötig)"
   if ! dpkg -s nvidia-container-toolkit >/dev/null 2>&1; then
@@ -42,7 +55,6 @@ if detect_nvidia; then
       | sudo_if_needed tee /etc/apt/sources.list.d/nvidia-container-toolkit.list >/dev/null
     sudo_if_needed apt-get update
     sudo_if_needed apt-get install -y nvidia-container-toolkit
-    # Runtime konfigurieren
     if have nvidia-ctk; then
       sudo_if_needed nvidia-ctk runtime configure --runtime=docker
     fi
@@ -61,14 +73,29 @@ elif have docker-compose; then
   COMPOSE="docker-compose"
 else
   echo "Weder 'docker compose' noch 'docker-compose' gefunden."
+  echo ""
+  echo "Drücke Enter zum Beenden..."
+  read
   exit 1
 fi
 
+echo ""
+echo "========================================="
 echo "[bootstrap] Build + Run"
+echo "UI wird verfügbar unter: http://localhost:8675"
+echo "Auth-Token/Passwort: AI_TOOLKIT_AUTH (default: password)"
+echo "========================================="
+echo ""
+
 $COMPOSE up --build
 
 # Dieser Teil wird nur erreicht wenn der Container gestoppt wird (Ctrl+C)
 echo ""
+echo "========================================="
 echo "Container wurde beendet."
 echo "Zum erneuten Starten: $COMPOSE up"
 echo "Zum Starten im Hintergrund: $COMPOSE up -d"
+echo "========================================="
+echo ""
+echo "Drücke Enter zum Beenden..."
+read
